@@ -9,6 +9,10 @@ import { AddJobService } from './services/addJobService'
 const EnvSchema = z.object({
   PORT: z.number().default(3000),
   NODE_ENV: z.enum(['development', 'production']).default('development'),
+  REDIS_HOST: z.string(),
+  REDIS_PORT: z.string(),
+  REDIS_PASSWORD: z.string().optional().default(''),
+  DATABASE_URL: z.string(),
 })
 
 

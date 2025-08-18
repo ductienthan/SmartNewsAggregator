@@ -1,0 +1,194 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Topic {
+  ECONOMICS
+  TECHNOLOGY
+  POLITICS
+}
+
+enum Length {
+  SHORT
+  STANDARD
+  DEEP
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  role         Role        @default(USER)
+  timezone     String      @default("America/Los_Angeles")
+  createdAt    DateTime    @default(now())
+  preferences  Preference?
+  bookmarks    Bookmark[]
+  digests      Digest[]
+  alerts       Alert[]
+  feedbacks    Feedback[]
+}
+
+model Preference {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  topics              Topic[]  // user-followed topics
+  region              String?  // "global" | "US" | ...
+  preferredPublishers String[] @default([])
+  blockedPublishers   String[] @default([])
+  digestLength        Length   @default(STANDARD)
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Source {
+  id          String   @id @default(cuid())
+  type        String   // "rss" | "api"
+  title       String
+  url         String   @unique
+  country     String?
+  reputation  Int      @default(50) // 0..100 initial weight
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  articles    Article[]
+  @@index([enabled])
+  @@index([reputation])
+}
+
+model Article {
+  id             String   @id @default(cuid())
+  sourceId       String
+  url            String   @unique
+  canonicalUrl   String?
+  title          String
+  author         String?
+  outlet         String?
+  publishedAt    DateTime
+  lang           String?  // "en"
+  paywalled      Boolean  @default(false)
+  cleanedText    String
+  rawSnapshotUrl String?  // S3/object storage key
+  hash           String   @unique   // content hash for idempotency
+  embedding      Bytes?             // optional (pgvector in phase 2)
+  createdAt      DateTime @default(now())
+  source         Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  entities       ArticleEntity[]
+  clusterMembers ClusterMember[]
+  representativeOf Cluster? @relation("Representative")
+  @@index([publishedAt])
+  @@index([outlet])
+  @@index([lang])
+}
+
+model Cluster {
+  id                String   @id @default(cuid())
+  representativeId  String   @unique
+  centroidEmbedding Bytes?
+  createdAt         DateTime @default(now())
+  representative   Article @relation("Representative", fields: [representativeId], references: [id])
+  members           ClusterMember[]
+  digestItems DigestItem[]
+  bookmarks   Bookmark[]
+  feedbacks   Feedback[]
+  @@index([createdAt])
+}
+
+model ClusterMember {
+  clusterId  String
+  articleId  String
+  similarity Float
+  cluster    Cluster @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  article    Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  @@id([clusterId, articleId])
+  @@index([similarity])
+}
+
+model Entity {
+  id     String  @id @default(cuid())
+  type   String  // "person" | "org" | "ticker" | "place"
+  value  String
+  meta   Json?
+  arts   ArticleEntity[]
+  @@unique([type, value])
+  @@index([type])
+}
+
+model ArticleEntity {
+  articleId String
+  entityId  String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  entity    Entity  @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  @@id([articleId, entityId])
+}
+
+model Digest {
+  id          String      @id @default(cuid())
+  userId      String
+  generatedAt DateTime    @default(now())
+  params      Json        // snapshot of prefs used
+  items       DigestItem[]
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, generatedAt])
+}
+
+model DigestItem {
+  id        String  @id @default(cuid())
+  digestId  String
+  clusterId String
+  rank      Int
+  summary   String
+  sources   Json     // [{title,url,outlet}]
+  digest    Digest   @relation(fields: [digestId], references: [id], onDelete: Cascade)
+  cluster   Cluster  @relation(fields: [clusterId], references: [id])
+  @@index([digestId, rank])
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  clusterId String
+  note      String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cluster   Cluster   @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  @@unique([userId, clusterId])
+  @@index([createdAt])
+}
+
+model Alert {
+  id              String   @id @default(cuid())
+  userId          String
+  query           String   // e.g., "FOMC OR 'rate hike'"
+  cooldownMinutes Int      @default(30)
+  lastSentAt      DateTime?
+  channels        String[] @default(["email"]) // "email"|"webhook"
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  clusterId String
+  vote      Int      // +1 | -1
+  reasons   String[] @default([])
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cluster   Cluster  @relation(fields: [clusterId], references: [id], onDelete: Cascade)
+  @@index([clusterId])
+}
