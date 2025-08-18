@@ -10,14 +10,34 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
+const zod_1 = require("zod");
+const config_1 = require("@nestjs/config");
+const bullmq_1 = require("@nestjs/bullmq");
+const addJobService_1 = require("./services/addJobService");
+const EnvSchema = zod_1.z.object({
+    PORT: zod_1.z.number().default(3000),
+    NODE_ENV: zod_1.z.enum(['development', 'production']).default('development'),
+});
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [],
+        imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                validate: (config) => EnvSchema.parse(config),
+            }),
+            bullmq_1.BullModule.registerQueue({
+                name: 'SnagWorker',
+                connection: {
+                    host: process.env.REDIS_HOST,
+                    port: parseInt(process.env.REDIS_PORT ?? '6379'),
+                },
+            }),
+        ],
         controllers: [app_controller_1.AppController],
-        providers: [app_service_1.AppService],
+        providers: [app_service_1.AppService, addJobService_1.AddJobService],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

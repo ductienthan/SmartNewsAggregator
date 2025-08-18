@@ -7,11 +7,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "format": "prettier --write \"apps/**/src/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs}/**/*.ts\" --fix",
-    "api:dev": "pnpm --filter smart-news-aggregator start:dev",
-    "api:build": "pnpm --filter smart-news-aggregator build",
-    "api:test": "pnpm --filter smart-news-aggregator test",
-    "api:start": "pnpm --filter smart-news-aggregator start",
-    "api:start:prod": "pnpm --filter smart-news-aggregator start:prod"
+    "api:dev": "pnpm --filter @snag/api start:dev",
+    "api:build": "pnpm --filter @snag/api build",
+    "api:test": "pnpm --filter @snag/api test",
+    "api:start": "pnpm --filter @snag/api start",
+    "api:start:prod": "pnpm --filter @snag/api start:prod",
+    "worker:dev": "pnpm --filter worker start:dev",
+    "worker:build": "pnpm --filter worker build",
+    "worker:start": "pnpm --filter worker start",
+    "worker:start:prod": "pnpm --filter worker start:prod"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +31,20 @@
     "eslint-plugin-prettier": "^5.2.2",
     "prettier": "^3.4.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "zod": "^4.0.17"
+  },
+  "overrides": {
+    "@nestjs/common": "11.1.6",
+    "@nestjs/core": "11.1.6",
+    "@nestjs/platform-express": "11.1.6",
+    "@nestjs/swagger": "11.0.0",
+    "class-validator": "0.14.2",
+    "class-transformer": "0.5.1"
+  },
+  "dependencies": {
+    "@nestjs/common": "11.1.6",
+    "@nestjs/core": "11.1.6",
+    "@nestjs/platform-express": "11.1.6"
   }
 }
