@@ -4,6 +4,8 @@
 /apps/api/node_modules
 /build
 *dist*
+*gitpod*
+*build*
 
 # Logs
 logs

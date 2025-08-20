@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Body } from '@nestjs/common'
 import { AppService } from './app.service'
 import { AddJobService } from './services/addJobService'
-
+import { RegularSchema } from '@snag/share'
+import { ApiBody, ApiResponse } from '@nestjs/swagger'
 @Controller({
   version: '1',
 })
@@ -20,6 +21,15 @@ export class AppController {
   @Get('health')
   healthCheck(): string {
     return 'OK'
+  }
+  
+  @Get('schema')
+  @ApiBody({ type: RegularSchema})
+  @ApiResponse({status: 200, type: RegularSchema})
+  getSchema(): RegularSchema {
+    let response = new RegularSchema();
+    response.message ="Success";
+    return response
   }
 
   @Post('add-job')
