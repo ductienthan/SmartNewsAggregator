@@ -12,17 +12,23 @@
     "api:test": "pnpm --filter @snag/api test",
     "api:start": "pnpm --filter @snag/api start",
     "api:start:prod": "pnpm --filter @snag/api start:prod",
-    "worker:dev": "pnpm --filter worker start:dev",
-    "worker:build": "pnpm --filter worker build",
-    "worker:start": "pnpm --filter worker start",
-    "worker:start:prod": "pnpm --filter worker start:prod"
+    "worker:dev": "pnpm --filter @snag/worker start:dev",
+    "worker:build": "pnpm --filter @snag/worker build",
+    "worker:start": "pnpm --filter @snag/worker start",
+    "worker:start:prod": "pnpm --filter @snag/worker start:prod",
+    "dev": "pnpm --filter @snag/api start:dev & pnpm --filter @snag/worker start:dev",
+    "start": "pnpm --filter @snag/api start & pnpm --filter @snag/worker start",
+    "start:prod": "pnpm --filter @snag/api start:prod & pnpm --filter @snag/worker start:prod",
+    "build": "pnpm run --recursive build",
+    "build:api": "pnpm --filter @snag/api build",
+    "build:worker": "pnpm --filter @snag/worker build",
+    "build:share": "pnpm --filter @snag/share build"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.5.2",
-  "devDependencies": {
+  "dependencies": {
     "@nestjs/cli": "^11.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.7",
     "@typescript-eslint/eslint-plugin": "^8.39.1",
     "@typescript-eslint/parser": "^8.39.1",
@@ -34,7 +40,19 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "zod": "^4.0.17"
+    "@nestjs/common": "11.1.6",
+    "@nestjs/core": "11.1.6",
+    "@nestjs/platform-express": "11.1.6",
+    "@prisma/client": "6.14.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "prettier": "^3.4.2",
+    "ts-node": "^10.9.2"
   },
   "overrides": {
     "@nestjs/common": "11.1.6",
@@ -43,11 +61,5 @@
     "@nestjs/swagger": "11.0.0",
     "class-validator": "0.14.2",
     "class-transformer": "0.5.1"
-  },
-  "dependencies": {
-    "@nestjs/common": "11.1.6",
-    "@nestjs/core": "11.1.6",
-    "@nestjs/platform-express": "11.1.6",
-    "@prisma/client": "6.14.0"
   }
 }

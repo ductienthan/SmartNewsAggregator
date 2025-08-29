@@ -10,8 +10,8 @@ import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './modules/auth.module'
 
 const EnvSchema = z.object({
-  PORT: z.number().default(3000),
-  NODE_ENV: z.enum(['development', 'production']).default('development'),
+  PORT: z.coerce.number().default(3000),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string(),
   REDIS_PASSWORD: z.string().optional().default(''),
