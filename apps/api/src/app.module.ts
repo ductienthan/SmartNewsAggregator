@@ -7,8 +7,8 @@ import { BullModule } from '@nestjs/bullmq'
 import { AddJobService } from './services/addJobService'
 
 const EnvSchema = z.object({
-  PORT: z.number().default(3000),
-  NODE_ENV: z.enum(['development', 'production']).default('development'),
+  PORT: z.coerce.number().default(3000),
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   REDIS_HOST: z.string(),
   REDIS_PORT: z.string(),
   REDIS_PASSWORD: z.string().optional().default(''),
@@ -20,6 +20,7 @@ const EnvSchema = z.object({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '../../.env',
       validate: (config) => EnvSchema.parse(config),
     }),
     BullModule.registerQueue({

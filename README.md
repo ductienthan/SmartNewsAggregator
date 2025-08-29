@@ -1,98 +1,255 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Smart News Aggregator
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A modern news aggregation platform built with NestJS, featuring a microservices architecture with API and worker services, powered by BullMQ for job processing and PostgreSQL for data persistence.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Architecture
 
-## Description
+This application follows a microservices architecture with the following components:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **API Service** (`@snag/api`) - RESTful API for news aggregation
+- **Worker Service** (`@snag/worker`) - Background job processing
+- **Shared Package** (`@snag/share`) - Common utilities and DTOs
+- **PostgreSQL** - Primary database
+- **Redis** - BullMQ queue management
 
-## Project setup
+## 🚀 Features
 
+- **News Aggregation** - Collect and process news from various sources
+- **Job Queue System** - Asynchronous job processing with BullMQ
+- **API Versioning** - RESTful API with version control
+- **Swagger Documentation** - Interactive API documentation
+- **Environment Configuration** - Flexible configuration management
+- **Docker Support** - Containerized deployment
+- **TypeScript** - Full type safety
+
+## 📋 Prerequisites
+
+- **Node.js** 22.18.0 or higher
+- **pnpm** 10.5.2 or higher
+- **Docker** and **Docker Compose** (for containerized deployment)
+- **PostgreSQL** 15+ (if running locally)
+- **Redis** 7+ (if running locally)
+
+## 🛠️ Installation
+
+### Option 1: Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd smart-news-aggregator
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+4. **Start PostgreSQL and Redis**
+   ```bash
+   # Using Docker (recommended)
+   docker run -d --name postgres -e POSTGRES_DB=smart-news -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=smartnews123 -p 5432:5432 postgres:15-alpine
+   docker run -d --name redis -p 6379:6379 redis:7-alpine
+   
+   # Or install locally and start services
+   ```
+
+5. **Build shared packages**
+   ```bash
+   pnpm build:share
+   ```
+
+6. **Start the services**
+   ```bash
+   # Start both API and worker in development mode
+   pnpm dev
+   
+   # Or start individually
+   pnpm api:dev      # API only
+   pnpm worker:dev   # Worker only
+   ```
+
+### Option 2: Docker Compose (Recommended)
+
+1. **Clone and navigate to the repository**
+   ```bash
+   git clone <repository-url>
+   cd smart-news-aggregator
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env if needed
+   ```
+
+3. **Start all services**
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Access the services**
+   - API: http://localhost:3000
+   - Worker: http://localhost:3001
+   - Swagger Docs: http://localhost:3000/docs
+
+## 🔧 Available Scripts
+
+### Root Level Commands
 ```bash
-$ pnpm install
+# Development
+pnpm dev                    # Start both API and worker in dev mode
+pnpm start                  # Start both services in production mode
+pnpm start:prod            # Start both services in production mode
+
+# Individual Services
+pnpm api:dev               # Start API in development mode
+pnpm api:start             # Start API in production mode
+pnpm worker:dev            # Start worker in development mode
+pnpm worker:start          # Start worker in production mode
+
+# Building
+pnpm build                 # Build all packages
+pnpm build:api             # Build API only
+pnpm build:worker          # Build worker only
+pnpm build:share           # Build shared package only
+
+# Testing
+pnpm api:test              # Run API unit tests
+pnpm worker:test           # Run worker unit tests
+pnpm test:e2e              # Run e2e tests
 ```
 
-## Compile and run the project
-
+### Docker Commands
 ```bash
-# development
-$ pnpm run start
+# Start all services
+docker-compose up
 
-# watch mode
-$ pnpm run start:dev
+# Start in background
+docker-compose up -d
 
-# production mode
-$ pnpm run start:prod
+# Stop all services
+docker-compose down
+
+# View logs
+docker-compose logs -f api
+docker-compose logs -f worker
+
+# Rebuild and start
+docker-compose up --build
 ```
 
-## Run tests
+## 🌐 API Endpoints
+
+### Base URL: `http://localhost:3000`
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/v1/` | Health check |
+| GET | `/v1/health` | Health status |
+| POST | `/v1/add-job` | Add a job to the queue |
+| GET | `/docs` | Swagger documentation |
+
+### Example Usage
 
 ```bash
-# unit tests
-$ pnpm run test
+# Health check
+curl http://localhost:3000/v1/health
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+# Add a job
+curl -X POST http://localhost:3000/v1/add-job \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello World!"}'
 ```
 
-## Deployment
+## 🔍 Monitoring
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### BullMQ Dashboard
+Access the BullMQ dashboard to monitor job queues:
+- Navigate to your API endpoint
+- Check Redis for queue status
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### Redis Commands for Queue Monitoring
+```bash
+# Connect to Redis
+redis-cli
+
+# Check BullMQ keys
+KEYS "*SnagWorker*"
+
+# Get queue status
+LLEN bull:SnagWorker:wait
+LLEN bull:SnagWorker:active
+LLEN bull:SnagWorker:completed
+
+# Get job data
+HGETALL bull:SnagWorker:1
+```
+
+## 🧪 Testing
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Unit tests
+pnpm api:test
+pnpm worker:test
+
+# E2E tests
+pnpm test:e2e
+
+# Test coverage
+pnpm api:test:cov
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📁 Project Structure
 
-## Resources
+```
+smart-news-aggregator/
+├── apps/
+│   ├── api/                 # API service
+│   │   ├── src/
+│   │   │   ├── controllers/
+│   │   │   ├── services/
+│   │   │   └── main.ts
+│   │   └── package.json
+│   └── worker/              # Worker service
+│       ├── src/
+│       │   ├── processors/
+│       │   └── main.ts
+│       └── package.json
+├── packages/
+│   └── share/               # Shared utilities
+│       ├── src/
+│       └── package.json
+├── docker-compose.yml       # Docker services
+├── package.json            # Root package.json
+└── README.md
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🔐 Environment Variables
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+See `.env.example` for all available environment variables.
 
-## Support
+## 🤝 Contributing
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-## Stay in touch
+## 📄 License
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+This project is licensed under the ISC License.
 
-## License
+## 🆘 Support
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+For support and questions:
+- Create an issue in the repository
+- Check the documentation
+- Review the Swagger docs at `/docs`
