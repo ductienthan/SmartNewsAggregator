@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
+  // "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
@@ -9,7 +9,9 @@
     "declarationMap": true,
     "emitDeclarationOnly": false,
     "composite": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "noEmit": false,
+    "noEmitOnError": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

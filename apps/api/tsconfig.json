@@ -22,8 +22,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "types": ["node", "jest"],
-    "composite": true
+    "composite": true,
+    "noEmit": false,
+    "emitDeclarationOnly": false
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"]
 }

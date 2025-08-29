@@ -4,9 +4,12 @@ import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { VersioningType } from '@nestjs/common'
+import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.filter'
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
+  app.enableCors()
   app.enableVersioning({
     type: VersioningType.URI,
     defaultVersion: '1',
@@ -14,6 +17,17 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
+    forbidNonWhitelisted: true,
+    //make class-validator error concise
+    exceptionFactory: (errors) => {
+      const message = errors.map(e => (
+        {
+          field: e.property,
+          constraints: e.constraints
+        }
+      ))
+      return new Error(JSON.stringify(message))
+    },
   }))
 
   const config = new DocumentBuilder()
@@ -26,6 +40,14 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService)
   const port = configService.get<number>('PORT') ?? 3000
-  await app.listen(port)
+  app.use((req, _res, next) => {
+    console.log(`[REQ] ${req.method} ${req.url}`)
+    next()
+  })
+  app.useGlobalFilters(
+    new PrismaClientExceptionFilter(),
+    new AllExceptionsFilter()
+  )
+  await app.listen(port, '0.0.0.0')
 }
 bootstrap()

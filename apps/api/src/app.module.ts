@@ -5,6 +5,9 @@ import { z } from 'zod'
 import { ConfigModule } from '@nestjs/config'
 import { BullModule } from '@nestjs/bullmq'
 import { AddJobService } from './services/addJobService'
+import { resolve } from 'path'
+import { PrismaModule } from './prisma/prisma.module'
+import { AuthModule } from './modules/auth.module'
 
 const EnvSchema = z.object({
   PORT: z.number().default(3000),
@@ -15,11 +18,13 @@ const EnvSchema = z.object({
   DATABASE_URL: z.string(),
 })
 
+const ROOT_ENV = resolve(process.cwd(), '../../.env')
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [ROOT_ENV],
       validate: (config) => EnvSchema.parse(config),
     }),
     BullModule.registerQueue({
@@ -29,6 +34,8 @@ const EnvSchema = z.object({
         port: parseInt(process.env.REDIS_PORT ?? '6379'),
       },
     }),
+    PrismaModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService, AddJobService],

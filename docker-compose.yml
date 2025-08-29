@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: snag_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: smartnews
+      POSTGRES_PASSWORD: smartnews
+      POSTGRES_DB: snag
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgressql/data
+
+  redis:
+    image: redis:7
+    container_name: snag_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+volumes:
+  pgdata:
