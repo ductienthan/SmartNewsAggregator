@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
-import { ValidationPipe } from '@nestjs/common'
+import { ValidationPipe, BadRequestException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'
 import { VersioningType } from '@nestjs/common'
@@ -26,7 +26,7 @@ async function bootstrap() {
           constraints: e.constraints
         }
       ))
-      return new Error(JSON.stringify(message))
+      return new BadRequestException(JSON.stringify(message))
     },
   }))
 

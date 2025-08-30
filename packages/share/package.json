@@ -8,8 +8,9 @@
   "files": ["dist"],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc --watch -p tsconfig.json"
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "clean": "rm -rf dist/ tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "class-transformer": "^0.5.1",

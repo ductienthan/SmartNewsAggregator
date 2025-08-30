@@ -53,15 +53,20 @@ This application follows a microservices architecture with the following compone
 
 4. **Start PostgreSQL and Redis**
    ```bash
-   # Using Docker (recommended)
+   # Using the development script (recommended)
+   ./scripts/dev.sh start
+   
+   # Or manually with Docker Compose
+   docker-compose -f docker-compose.dev.yml up -d
+   
+   # Or using individual containers
    docker run -d --name postgres -e POSTGRES_DB=smart-news -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=smartnews123 -p 5432:5432 postgres:15-alpine
    docker run -d --name redis -p 6379:6379 redis:7-alpine
-   
-   # Or install locally and start services
    ```
 
-5. **Build shared packages**
+5. **Generate Prisma client and build shared packages**
    ```bash
+   pnpm prisma generate
    pnpm build:share
    ```
 
@@ -128,21 +133,20 @@ pnpm test:e2e              # Run e2e tests
 
 ### Docker Commands
 ```bash
-# Start all services
-docker-compose up
+# Development Infrastructure (PostgreSQL + Redis)
+./scripts/dev.sh start    # Start infrastructure
+./scripts/dev.sh stop     # Stop infrastructure
+./scripts/dev.sh reset    # Reset all data
+./scripts/dev.sh status   # Show status
+./scripts/dev.sh logs     # Show logs
 
-# Start in background
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f api
-docker-compose logs -f worker
-
-# Rebuild and start
-docker-compose up --build
+# Full Application (API + Worker + Infrastructure)
+docker-compose up         # Start all services
+docker-compose up -d      # Start in background
+docker-compose down       # Stop all services
+docker-compose logs -f api # View API logs
+docker-compose logs -f worker # View worker logs
+docker-compose up --build # Rebuild and start
 ```
 
 ## 🌐 API Endpoints

@@ -22,7 +22,17 @@
     "build": "pnpm run --recursive build",
     "build:api": "pnpm --filter @snag/api build",
     "build:worker": "pnpm --filter @snag/worker build",
-    "build:share": "pnpm --filter @snag/share build"
+    "build:share": "pnpm --filter @snag/share build",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:migrate:reset": "prisma migrate reset",
+    "prisma:db:push": "prisma db push",
+    "prisma:db:seed": "prisma db seed",
+    "db:setup": "pnpm prisma:generate && pnpm prisma:migrate:deploy",
+    "db:reset": "pnpm prisma:migrate:reset",
+    "db:seed": "pnpm prisma:db:seed"
   },
   "keywords": [],
   "dependencies": {
