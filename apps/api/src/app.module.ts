@@ -8,6 +8,7 @@ import { AddJobService } from './services/addJobService'
 import { resolve } from 'path'
 import { PrismaModule } from './prisma/prisma.module'
 import { AuthModule } from './modules/auth.module'
+import { UserController } from './controllers/user.controller'
 
 const EnvSchema = z.object({
   PORT: z.coerce.number().default(3000),
@@ -37,7 +38,7 @@ const ROOT_ENV = resolve(process.cwd(), '../../.env')
     PrismaModule,
     AuthModule
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserController],
   providers: [AppService, AddJobService],
 })
 export class AppModule {}
