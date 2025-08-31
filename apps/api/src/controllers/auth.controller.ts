@@ -10,8 +10,7 @@ import {
   UseGuards,
   UnauthorizedException
 } from '@nestjs/common'
-import { 
-  RegularSchema, 
+import {
   RegisterUser, 
   AccessTokenResponse, 
   LoginDto
