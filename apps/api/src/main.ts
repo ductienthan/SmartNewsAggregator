@@ -8,7 +8,9 @@ import { PrismaClientExceptionFilter } from './common/filters/prisma-exception.f
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create(AppModule, {
+    logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+  })
   app.enableCors()
   app.enableVersioning({
     type: VersioningType.URI,
@@ -40,10 +42,7 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService)
   const port = configService.get<number>('PORT') ?? 3000
-  app.use((req, _res, next) => {
-    console.log(`[REQ] ${req.method} ${req.url}`)
-    next()
-  })
+  // Winston logger will handle request logging through the MetricsInterceptor
   app.useGlobalFilters(
     new PrismaClientExceptionFilter(),
     new AllExceptionsFilter()
