@@ -4,11 +4,11 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: smart-news-postgres
+    container_name: smart-news-postgres-prod
     environment:
       POSTGRES_DB: smart-news
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: smartnews123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-smartnews123}
     ports:
       - "5432:5432"
     volumes:
@@ -20,11 +20,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # Redis for BullMQ
   redis:
     image: redis:7-alpine
-    container_name: smart-news-redis
+    container_name: smart-news-redis-prod
     ports:
       - "6379:6379"
     volumes:
@@ -36,62 +37,74 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  # Database Migration Job (runs once per deployment)
+  migration:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: smart-news-migration
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-smartnews123}@postgres:5432/smart-news
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - smart-news-network
+    command: sh -c "pnpm prisma migrate deploy"
+    restart: "no"
 
   # API Service
   api:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: smart-news-api
+    container_name: smart-news-api-prod
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://postgres:smartnews123@postgres:5432/smart-news
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-smartnews123}@postgres:5432/smart-news
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
       - "3000:3000"
     depends_on:
+      migration:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - smart-news-network
-    volumes:
-      - ./apps/api:/app/apps/api
-      - ./packages:/app/packages
-      - ./prisma:/app/prisma
-      - /app/node_modules
-    command: sh -c "pnpm prisma generate && pnpm prisma migrate deploy && pnpm api:dev"
+    restart: unless-stopped
 
   # Worker Service
   worker:
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
-    container_name: smart-news-worker
+    container_name: smart-news-worker-prod
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://postgres:smartnews123@postgres:5432/smart-news
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-smartnews123}@postgres:5432/smart-news
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
       - "3001:3001"
     depends_on:
+      migration:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
       - smart-news-network
-    volumes:
-      - ./apps/worker:/app/apps/worker
-      - ./packages:/app/packages
-      - ./prisma:/app/prisma
-      - /app/node_modules
-    command: sh -c "pnpm prisma generate && pnpm worker:dev"
+    restart: unless-stopped
 
 volumes:
   postgres_data:

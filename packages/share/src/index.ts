@@ -1,2 +1,7 @@
 export * from './auth/login.dto'
 export * from './common/regular.dto'
+export * from './auth/register.dto'
+export * from './auth/regular-response.dto'
+export * from './auth/tokens.response'
+export * from './auth/jwt-payload.type'
+export * from './common/error-response.dto'

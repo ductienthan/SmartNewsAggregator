@@ -1,255 +1,485 @@
-# Smart News Aggregator
+# 🚀 Smart News Aggregator
 
-A modern news aggregation platform built with NestJS, featuring a microservices architecture with API and worker services, powered by BullMQ for job processing and PostgreSQL for data persistence.
+A comprehensive news aggregation platform built with NestJS, featuring JWT authentication, role-based access control, Prometheus metrics, Winston logging, and a microservices architecture.
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [API Documentation](#-api-documentation)
+- [Authentication & Authorization](#-authentication--authorization)
+- [Monitoring & Observability](#-monitoring--observability)
+- [Database Management](#-database-management)
+- [Development](#-development)
+- [Production Deployment](#-production-deployment)
+- [Contributing](#-contributing)
+
+## ✨ Features
+
+### 🔐 **Authentication & Security**
+- **JWT-based authentication** with access and refresh tokens
+- **Role-based access control** (USER, ADMIN roles)
+- **Token blacklisting** for secure logout
+- **Password hashing** with configurable secrets
+- **6-hour maximum token validity** for enhanced security
+
+### 📊 **Monitoring & Observability**
+- **Prometheus metrics** collection and exposure
+- **Winston structured logging** with multiple transports
+- **HTTP request monitoring** with response times and status codes
+- **Business metrics** tracking (user registrations, token operations)
+- **Database performance monitoring**
+
+### 🏗️ **Architecture**
+- **Monorepo structure** with pnpm workspaces
+- **Microservices architecture** (API + Worker)
+- **Docker containerization** for development and production
+- **PostgreSQL database** with Prisma ORM
+- **Redis** for caching and token blacklist
+
+### 🎯 **API Features**
+- **RESTful API** with versioning (v1)
+- **Swagger/OpenAPI documentation**
+- **Input validation** with class-validator
+- **Error handling** with custom filters and decorators
+- **Rate limiting** and security headers
 
 ## 🏗️ Architecture
 
-This application follows a microservices architecture with the following components:
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   API Service   │    │  Worker Service │
+│   (React/Vue)   │◄──►│   (NestJS)      │◄──►│   (NestJS)     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                       │
+                                ▼                       ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │   PostgreSQL    │    │      Redis      │
+                       │   (Database)    │    │   (Cache/Queue) │
+                       └─────────────────┘    └─────────────────┘
+                                │                       │
+                                ▼                       ▼
+                       ┌─────────────────┐    ┌─────────────────┐
+                       │   Prometheus    │    │     Grafana     │
+                       │   (Metrics)     │    │   (Dashboard)   │
+                       └─────────────────┘    └─────────────────┘
+```
 
-- **API Service** (`@snag/api`) - RESTful API for news aggregation
-- **Worker Service** (`@snag/worker`) - Background job processing
-- **Shared Package** (`@snag/share`) - Common utilities and DTOs
+## 🛠️ Tech Stack
+
+### **Backend Framework**
+- **NestJS** - Progressive Node.js framework
+- **TypeScript** - Type-safe JavaScript
+- **Prisma** - Modern database ORM
+- **Passport.js** - Authentication middleware
+
+### **Database & Cache**
 - **PostgreSQL** - Primary database
-- **Redis** - BullMQ queue management
+- **Redis** - Caching and token blacklist
+- **Prisma** - Database client and migrations
 
-## 🚀 Features
+### **Authentication & Security**
+- **JWT** - JSON Web Tokens
+- **bcrypt** - Password hashing
+- **class-validator** - Input validation
 
-- **News Aggregation** - Collect and process news from various sources
-- **Job Queue System** - Asynchronous job processing with BullMQ
-- **API Versioning** - RESTful API with version control
-- **Swagger Documentation** - Interactive API documentation
-- **Environment Configuration** - Flexible configuration management
-- **Docker Support** - Containerized deployment
-- **TypeScript** - Full type safety
+### **Monitoring & Logging**
+- **Prometheus** - Metrics collection
+- **Winston** - Structured logging
+- **Grafana** - Metrics visualization
 
-## 📋 Prerequisites
-
-- **Node.js** 22.18.0 or higher
-- **pnpm** 10.5.2 or higher
-- **Docker** and **Docker Compose** (for containerized deployment)
-- **PostgreSQL** 15+ (if running locally)
-- **Redis** 7+ (if running locally)
-
-## 🛠️ Installation
-
-### Option 1: Local Development
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd smart-news-aggregator
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-4. **Start PostgreSQL and Redis**
-   ```bash
-   # Using Docker (recommended)
-   docker run -d --name postgres -e POSTGRES_DB=smart-news -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=smartnews123 -p 5432:5432 postgres:15-alpine
-   docker run -d --name redis -p 6379:6379 redis:7-alpine
-   
-   # Or install locally and start services
-   ```
-
-5. **Build shared packages**
-   ```bash
-   pnpm build:share
-   ```
-
-6. **Start the services**
-   ```bash
-   # Start both API and worker in development mode
-   pnpm dev
-   
-   # Or start individually
-   pnpm api:dev      # API only
-   pnpm worker:dev   # Worker only
-   ```
-
-### Option 2: Docker Compose (Recommended)
-
-1. **Clone and navigate to the repository**
-   ```bash
-   git clone <repository-url>
-   cd smart-news-aggregator
-   ```
-
-2. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env if needed
-   ```
-
-3. **Start all services**
-   ```bash
-   docker-compose up --build
-   ```
-
-4. **Access the services**
-   - API: http://localhost:3000
-   - Worker: http://localhost:3001
-   - Swagger Docs: http://localhost:3000/docs
-
-## 🔧 Available Scripts
-
-### Root Level Commands
-```bash
-# Development
-pnpm dev                    # Start both API and worker in dev mode
-pnpm start                  # Start both services in production mode
-pnpm start:prod            # Start both services in production mode
-
-# Individual Services
-pnpm api:dev               # Start API in development mode
-pnpm api:start             # Start API in production mode
-pnpm worker:dev            # Start worker in development mode
-pnpm worker:start          # Start worker in production mode
-
-# Building
-pnpm build                 # Build all packages
-pnpm build:api             # Build API only
-pnpm build:worker          # Build worker only
-pnpm build:share           # Build shared package only
-
-# Testing
-pnpm api:test              # Run API unit tests
-pnpm worker:test           # Run worker unit tests
-pnpm test:e2e              # Run e2e tests
-```
-
-### Docker Commands
-```bash
-# Start all services
-docker-compose up
-
-# Start in background
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs -f api
-docker-compose logs -f worker
-
-# Rebuild and start
-docker-compose up --build
-```
-
-## 🌐 API Endpoints
-
-### Base URL: `http://localhost:3000`
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/v1/` | Health check |
-| GET | `/v1/health` | Health status |
-| POST | `/v1/add-job` | Add a job to the queue |
-| GET | `/docs` | Swagger documentation |
-
-### Example Usage
-
-```bash
-# Health check
-curl http://localhost:3000/v1/health
-
-# Add a job
-curl -X POST http://localhost:3000/v1/add-job \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Hello World!"}'
-```
-
-## 🔍 Monitoring
-
-### BullMQ Dashboard
-Access the BullMQ dashboard to monitor job queues:
-- Navigate to your API endpoint
-- Check Redis for queue status
-
-### Redis Commands for Queue Monitoring
-```bash
-# Connect to Redis
-redis-cli
-
-# Check BullMQ keys
-KEYS "*SnagWorker*"
-
-# Get queue status
-LLEN bull:SnagWorker:wait
-LLEN bull:SnagWorker:active
-LLEN bull:SnagWorker:completed
-
-# Get job data
-HGETALL bull:SnagWorker:1
-```
-
-## 🧪 Testing
-
-```bash
-# Unit tests
-pnpm api:test
-pnpm worker:test
-
-# E2E tests
-pnpm test:e2e
-
-# Test coverage
-pnpm api:test:cov
-```
+### **Development Tools**
+- **pnpm** - Package manager
+- **Docker** - Containerization
+- **ESLint** - Code linting
+- **Jest** - Testing framework
 
 ## 📁 Project Structure
 
 ```
 smart-news-aggregator/
 ├── apps/
-│   ├── api/                 # API service
+│   ├── api/                          # Main API service
 │   │   ├── src/
-│   │   │   ├── controllers/
-│   │   │   ├── services/
-│   │   │   └── main.ts
+│   │   │   ├── common/               # Shared utilities
+│   │   │   │   ├── base/            # Base classes
+│   │   │   │   ├── decorators/      # Custom decorators
+│   │   │   │   ├── filters/         # Exception filters
+│   │   │   │   ├── guards/          # Authentication guards
+│   │   │   │   ├── interceptors/    # HTTP interceptors
+│   │   │   │   ├── services/        # Business logic
+│   │   │   │   └── strategies/      # JWT strategy
+│   │   │   ├── controllers/         # API endpoints
+│   │   │   ├── modules/             # Feature modules
+│   │   │   └── prisma/              # Database client
+│   │   ├── Dockerfile               # API container
 │   │   └── package.json
-│   └── worker/              # Worker service
+│   └── worker/                       # Background job worker
 │       ├── src/
-│       │   ├── processors/
-│       │   └── main.ts
+│       ├── Dockerfile               # Worker container
 │       └── package.json
 ├── packages/
-│   └── share/               # Shared utilities
+│   └── share/                        # Shared DTOs and types
 │       ├── src/
+│       │   ├── auth/                # Authentication DTOs
+│       │   ├── common/              # Common DTOs
+│       │   └── index.ts
 │       └── package.json
-├── docker-compose.yml       # Docker services
-├── package.json            # Root package.json
-└── README.md
+├── prisma/                           # Database schema and migrations
+├── scripts/                          # Utility scripts
+├── docker-compose.yml                # Development environment
+├── docker-compose.prod.yml           # Production environment
+└── package.json                      # Root package.json
 ```
 
-## 🔐 Environment Variables
+## 🚀 Getting Started
 
-See `.env.example` for all available environment variables.
+### **Prerequisites**
+- Node.js 18+ 
+- pnpm 8+
+- Docker & Docker Compose
+- PostgreSQL 14+
+- Redis 6+
+
+### **1. Clone the Repository**
+```bash
+git clone <repository-url>
+cd smart-news-aggregator
+```
+
+### **2. Install Dependencies**
+```bash
+pnpm install
+```
+
+### **3. Environment Setup**
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit .env with your configuration
+nano .env
+```
+
+**Required Environment Variables:**
+```env
+# Database
+DATABASE_URL="postgresql://postgres:password@localhost:5432/smart-news"
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# JWT
+JWT_ACCESS_SECRET=your_jwt_access_secret_here
+JWT_ACCESS_TTL=30m
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_here
+JWT_REFRESH_TTL=7d
+
+# Security
+HASH_SECRET=your_hash_secret_here
+
+# Logging
+LOG_LEVEL=info
+```
+
+### **4. Start Development Environment**
+```bash
+# Start PostgreSQL and Redis
+pnpm dev:start
+
+# Setup database
+pnpm db:setup
+
+# Create admin user
+./scripts/create-admin.sh
+
+# Start API in development mode
+pnpm api:dev
+```
+
+### **5. Verify Installation**
+```bash
+# Health check
+curl http://localhost:3000/v1/auth/ping
+
+# API documentation
+open http://localhost:3000/docs
+```
+
+## 📚 API Documentation
+
+### **Authentication Endpoints**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/v1/auth/register` | Register new user | ❌ |
+| POST | `/v1/auth/login` | Login user | ❌ |
+| POST | `/v1/auth/logout` | Logout user | ✅ |
+| POST | `/v1/auth/refresh` | Refresh access token | ❌ |
+
+### **User Management Endpoints**
+
+| Method | Endpoint | Description | Auth Required | Role Required |
+|--------|----------|-------------|---------------|---------------|
+| GET | `/v1/users/profile` | Get user profile | ✅ | Any |
+| GET | `/v1/users/protected` | Protected route example | ✅ | Any |
+
+### **Admin Endpoints**
+
+| Method | Endpoint | Description | Auth Required | Role Required |
+|--------|----------|-------------|---------------|---------------|
+| DELETE | `/v1/admin/users/:userId` | Delete user by ID | ✅ | ADMIN |
+| GET | `/v1/admin/users` | List all users | ✅ | ADMIN |
+| GET | `/v1/admin/users/:userId` | Get user details | ✅ | ADMIN |
+
+### **Monitoring Endpoints**
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/v1/metrics` | Prometheus metrics | ❌ |
+| GET | `/v1/metrics/health` | Metrics service health | ❌ |
+| GET | `/v1/metrics/reset` | Reset metrics | ✅ |
+
+## 🔐 Authentication & Authorization
+
+### **JWT Token Structure**
+```json
+{
+  "sub": "user_id",
+  "email": "user@example.com",
+  "role": "USER",
+  "iat": 1642234567,
+  "exp": 1642236367
+}
+```
+
+### **Security Features**
+- **Token Validation**: Signature, expiry, payload structure
+- **Blacklist Checking**: Rejects revoked tokens
+- **Maximum Expiry**: 6-hour maximum validity period
+- **Role-Based Access**: USER and ADMIN roles
+- **Password Security**: bcrypt hashing with configurable secrets
+
+### **Usage Examples**
+
+#### **Login and Get Token**
+```bash
+curl -X POST http://localhost:3000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+```
+
+#### **Access Protected Route**
+```bash
+curl -X GET http://localhost:3000/v1/users/profile \
+  -H "Authorization: Bearer <your_jwt_token>"
+```
+
+#### **Admin Operations**
+```bash
+# Delete user (Admin only)
+curl -X DELETE http://localhost:3000/v1/admin/users/user_id \
+  -H "Authorization: Bearer <admin_jwt_token>"
+
+# List all users (Admin only)
+curl -X GET http://localhost:3000/v1/admin/users \
+  -H "Authorization: Bearer <admin_jwt_token>"
+```
+
+## 📊 Monitoring & Observability
+
+### **Prometheus Metrics**
+
+The application exposes comprehensive metrics at `/v1/metrics`:
+
+#### **HTTP Metrics**
+- `http_requests_total` - Total request count by method, path, status
+- `http_request_duration_seconds` - Request duration distribution
+- `http_requests_in_progress` - Currently active requests
+
+#### **Authentication Metrics**
+- `auth_attempts_total` - Login attempts (success/failure)
+- `auth_success_total` - Successful authentications
+- `auth_failure_total` - Failed authentications by reason
+
+#### **Business Metrics**
+- `users_registered_total` - User registration count
+- `tokens_generated_total` - JWT token generation
+- `tokens_blacklisted_total` - Token blacklisting
+
+#### **System Metrics**
+- `nodejs_heap_size_total_bytes` - Memory usage
+- `process_cpu_user_seconds_total` - CPU usage
+- `nodejs_eventloop_lag_seconds` - Event loop performance
+
+### **Winston Logging**
+
+Structured logging with multiple transports:
+
+- **Console**: Development-friendly colored output
+- **File**: Production logs with rotation
+- **HTTP**: External logging service integration
+
+### **Metrics Collection**
+
+Automatic metrics collection via:
+- **HTTP Interceptor**: Request/response metrics
+- **Service Integration**: Business logic metrics
+- **Default Metrics**: Node.js system metrics
+
+## 🗄️ Database Management
+
+### **Prisma Commands**
+```bash
+# Generate Prisma client
+pnpm prisma:generate
+
+# Run migrations
+pnpm prisma:migrate:deploy
+
+# Reset database
+pnpm prisma:migrate:reset
+
+# Seed database
+pnpm prisma:db:seed
+
+# View database
+pnpm prisma:studio
+```
+
+### **Database Schema**
+- **User Management**: Authentication, roles, preferences
+- **Content Management**: Articles, sources, clusters
+- **User Engagement**: Bookmarks, digests, alerts
+- **Analytics**: Feedback, usage tracking
+
+## 🛠️ Development
+
+### **Available Scripts**
+```bash
+# Development
+pnpm dev:start          # Start development services
+pnpm dev:stop           # Stop development services
+pnpm dev:reset          # Reset development environment
+pnpm dev:status         # Show service status
+pnpm dev:logs           # Show service logs
+
+# API
+pnpm api:dev            # Start API in development mode
+pnpm api:build          # Build API
+pnpm api:start          # Start API in production mode
+pnpm api:test           # Run API tests
+
+# Database
+pnpm db:setup           # Setup database and run migrations
+pnpm db:reset           # Reset database
+pnpm db:seed            # Seed database with sample data
+
+# Prisma
+pnpm prisma:generate    # Generate Prisma client
+pnpm prisma:migrate     # Run database migrations
+pnpm prisma:studio      # Open Prisma Studio
+```
+
+### **Code Quality**
+- **ESLint**: Code linting and formatting
+- **TypeScript**: Strict type checking
+- **Prettier**: Code formatting
+- **Jest**: Unit and integration testing
+
+### **Development Workflow**
+1. **Feature Development**: Create feature branch
+2. **Code Implementation**: Follow NestJS patterns
+3. **Testing**: Write unit and integration tests
+4. **Documentation**: Update API docs and README
+5. **Review**: Submit pull request for review
+
+## 🚀 Production Deployment
+
+### **Docker Deployment**
+```bash
+# Build production images
+pnpm build:prod
+
+# Deploy with Docker Compose
+pnpm deploy:prod
+
+# Update existing deployment
+pnpm update:prod
+```
+
+### **Environment Configuration**
+```env
+NODE_ENV=production
+LOG_LEVEL=info
+JWT_ACCESS_SECRET=<strong_secret>
+JWT_REFRESH_SECRET=<strong_secret>
+HASH_SECRET=<strong_secret>
+```
+
+### **Monitoring Setup**
+1. **Prometheus**: Scrape metrics from `/v1/metrics`
+2. **Grafana**: Create dashboards for visualization
+3. **Alerting**: Configure alerts for critical metrics
+4. **Log Aggregation**: Centralize logs for analysis
+
+### **Security Considerations**
+- **HTTPS**: Use SSL/TLS in production
+- **Secrets Management**: Use environment variables or secret managers
+- **Rate Limiting**: Implement API rate limiting
+- **CORS**: Configure appropriate CORS policies
+- **Input Validation**: Validate all user inputs
 
 ## 🤝 Contributing
 
+### **Development Setup**
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests
+4. Add tests and documentation
 5. Submit a pull request
+
+### **Code Standards**
+- Follow NestJS conventions
+- Use TypeScript strict mode
+- Write comprehensive tests
+- Document API changes
+- Follow commit message conventions
+
+### **Testing**
+```bash
+# Run all tests
+pnpm test
+
+# Run tests with coverage
+pnpm test:cov
+
+# Run e2e tests
+pnpm test:e2e
+
+# Run specific test suite
+pnpm test:unit
+pnpm test:integration
+```
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+## 🙏 Acknowledgments
 
-For support and questions:
-- Create an issue in the repository
-- Check the documentation
-- Review the Swagger docs at `/docs`
+- **NestJS Team** - For the excellent framework
+- **Prisma Team** - For the modern database toolkit
+- **Prometheus Community** - For the monitoring ecosystem
+- **Open Source Contributors** - For all the amazing libraries
+
+---
+
+**Built with ❤️ using modern web technologies**
+
+For questions and support, please open an issue or contact the development team.
