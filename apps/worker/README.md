@@ -1,98 +1,327 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Smart News Aggregator - Worker Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS-based worker service for the Smart News Aggregator that handles background job processing, news aggregation, and queue management with a modular Bull Board UI.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🏗️ Architecture
 
-## Description
+The worker service is built with a modular architecture following SOLID principles:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ pnpm install
+```
+src/
+├── common/
+│   ├── config/           # Configuration files
+│   ├── interfaces/       # TypeScript interfaces
+│   ├── modules/          # Feature modules
+│   └── services/         # Core services
+├── controllers/          # API controllers
+├── database/            # Database services
+├── processors/          # BullMQ job processors
+├── services/            # Business logic services
+├── sources/             # External data sources
+└── tasks/               # Scheduled tasks
 ```
 
-## Compile and run the project
+## 🚀 Features
+
+### Core Functionality
+- **News Aggregation**: Automated fetching from Hacker News API
+- **Background Processing**: BullMQ-based job queue system
+- **Scheduled Tasks**: Cron-based news collection every 30 minutes
+- **Database Storage**: PostgreSQL integration with Prisma ORM
+- **Deduplication**: Advanced article deduplication with retry strategy
+- **Logging**: Winston-based structured logging
+
+### Queue Management
+- **Bull Board UI**: Web-based queue monitoring and management
+- **Queue Statistics**: Real-time queue performance metrics
+- **Job Management**: View, retry, and clean up jobs
+- **Health Monitoring**: Queue health checks and status reporting
+
+## 📦 Installation
 
 ```bash
-# development
-$ pnpm run start
+# Install dependencies
+pnpm install
 
-# watch mode
-$ pnpm run start:dev
+# Build the application
+pnpm build
 
-# production mode
-$ pnpm run start:prod
+# Start in development mode
+pnpm dev
 ```
 
-## Run tests
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/smartnews"
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Logging
+LOG_LEVEL=debug
+NODE_ENV=development
+```
+
+### Docker Setup
 
 ```bash
-# unit tests
-$ pnpm run test
+# Start all services
+docker-compose up -d
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+# View logs
+docker-compose logs -f worker
 ```
 
-## Deployment
+## 🌐 API Endpoints
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Queue Management API (`/v1/queues/`)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+#### Statistics
+- `GET /stats` - Get statistics for all queues
+- `GET /stats/:queueName` - Get statistics for specific queue
+
+#### Job Management
+- `GET /jobs` - Get recent jobs from all queues
+- `GET /jobs/:queueName` - Get jobs from specific queue with filtering
+
+#### Maintenance
+- `POST /clean` - Clean old completed/failed jobs
+- `GET /health` - Health check for all queues
+- `GET /list` - List all registered queues
+- `GET /info/:queueName` - Detailed queue information
+
+### Bull Board UI (`/v1/admin/`)
+
+- `GET /queues` - Bull Board web interface
+- `GET /status` - Bull Board status and configuration
+
+### Scheduler API (`/v1/scheduler/`)
+
+- `POST /news/trigger` - Manually trigger news aggregation
+- `GET /news/status` - Get aggregation status
+- `GET /database/stats` - Database statistics
+- `GET /database/duplicates` - Duplicate article statistics
+- `POST /database/bulk-insert` - Bulk insert articles
+- `POST /database/cleanup-duplicates` - Clean up duplicates
+
+## 🎯 Queue System
+
+### Available Queues
+
+1. **news-queue**: Processes news aggregation jobs
+   - `process-news-batch`: Batch processing of news articles
+   - `cleanup-old-articles`: Cleanup of old articles
+
+### Job Types
+
+#### News Batch Processing
+```typescript
+{
+  stories: ProcessedStory[],
+  source: 'hacker-news',
+  batchId: string,
+  timestamp: string
+}
+```
+
+#### Cleanup Jobs
+```typescript
+{
+  olderThanDays: number
+}
+```
+
+## 🏛️ Modular Architecture
+
+### Core Services
+
+#### QueueAdapterService
+- **Purpose**: Manages queue registration and discovery
+- **Features**: Register/unregister queues, queue enumeration
+- **Interface**: `IQueueAdapterService`
+
+#### QueueStatsService
+- **Purpose**: Handles queue statistics and job management
+- **Features**: Statistics, job retrieval, cleanup operations
+- **Interface**: `IQueueManagementService`
+
+#### BullBoardService
+- **Purpose**: Manages Bull Board UI configuration
+- **Features**: UI setup, reinitialization, status monitoring
+
+### Controllers
+
+#### QueueManagementController
+- **Purpose**: RESTful API for queue operations
+- **Features**: Statistics, job management, health checks
+
+#### BullBoardController
+- **Purpose**: Serves Bull Board web interface
+- **Features**: UI routing, status endpoints
+
+#### SchedulerController
+- **Purpose**: Manages scheduled tasks and news sources
+- **Features**: Manual triggers, database operations
+
+## 📊 Monitoring & Observability
+
+### Bull Board UI
+
+Access the web interface at: `http://localhost:3001/v1/admin/queues/`
+
+**Features:**
+- Real-time queue monitoring
+- Job inspection and management
+- Retry failed jobs
+- Clean up old jobs
+- Queue statistics and performance metrics
+
+### Logging
+
+The service uses Winston for structured logging:
+
+```typescript
+// Log levels: error, warn, info, debug
+// Log files: worker-debug.log, worker-exceptions.log
+```
+
+### Health Checks
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+# Check queue health
+curl http://localhost:3001/v1/queues/health
+
+# Check Bull Board status
+curl http://localhost:3001/v1/admin/status
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 🔄 Background Processing
 
-## Resources
+### News Aggregation Flow
 
-Check out a few resources that may come in handy when working with NestJS:
+1. **Scheduled Trigger**: Cron job runs every 30 minutes
+2. **Data Fetching**: Retrieves stories from Hacker News API
+3. **Queue Processing**: Jobs are queued for background processing
+4. **Deduplication**: Articles are checked for duplicates
+5. **Database Storage**: Valid articles are stored in PostgreSQL
+6. **Cleanup**: Old articles are cleaned up automatically
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Retry Strategy
 
-## Support
+- **Max Retries**: 3 attempts
+- **Backoff Strategy**: Exponential backoff (1s, 2s, 4s)
+- **Error Handling**: Comprehensive error logging and recovery
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## 🛠️ Development
 
-## Stay in touch
+### Adding New Queues
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+1. Register queue in `app.module.ts`:
+```typescript
+BullModule.registerQueue({
+  name: 'new-queue',
+  connection: { host: process.env.REDIS_HOST, port: 6379 }
+})
+```
 
-## License
+2. Create processor:
+```typescript
+@Processor('new-queue')
+export class NewQueueProcessor extends WorkerHost {
+  @Process('job-name')
+  async processJob(job: Job) {
+    // Job processing logic
+  }
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+3. Queue will be automatically discovered by `QueueAdapterService`
+
+### Adding New Job Types
+
+1. Define job data interface
+2. Add processor method with `@Process('job-type')`
+3. Use `NewsQueueService` to add jobs to queue
+
+### Testing
+
+```bash
+# Run tests
+pnpm test
+
+# Run e2e tests
+pnpm test:e2e
+
+# Test coverage
+pnpm test:cov
+```
+
+## 🚀 Deployment
+
+### Production Build
+
+```bash
+# Build for production
+pnpm build
+
+# Start production server
+pnpm start:prod
+```
+
+### Docker Deployment
+
+```bash
+# Build Docker image
+docker build -t smart-news-worker .
+
+# Run container
+docker run -p 3001:3001 smart-news-worker
+```
+
+## 📈 Performance
+
+### Optimization Features
+
+- **Batch Processing**: Articles processed in chunks
+- **Connection Pooling**: Efficient database connections
+- **Redis Caching**: Fast queue operations
+- **Retry Strategy**: Resilient error handling
+- **Deduplication**: Prevents duplicate processing
+
+### Monitoring Metrics
+
+- Queue depth and processing rates
+- Job success/failure rates
+- Database operation performance
+- Memory and CPU usage
+- Error rates and types
+
+## 🔒 Security
+
+- **Input Validation**: All inputs are validated
+- **Error Handling**: Secure error messages
+- **Rate Limiting**: Prevents API abuse
+- **Health Checks**: Monitoring for anomalies
+
+## 🤝 Contributing
+
+1. Follow the modular architecture patterns
+2. Add proper TypeScript interfaces
+3. Include comprehensive logging
+4. Write tests for new features
+5. Update documentation
+
+## 📝 License
+
+This project is part of the Smart News Aggregator system.
+
+---
+
+For more information, see the main project documentation or contact the development team.
