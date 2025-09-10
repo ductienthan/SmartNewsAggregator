@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression, Interval, Timeout } from '@nestjs/schedule';
+import { ContentQueueService } from '../services/content-queue.service';
 
 @Injectable()
 export class ScheduledTasksService {
   private readonly logger = new Logger(ScheduledTasksService.name);
+
+  constructor(private readonly contentQueueService: ContentQueueService) {}
 
   /**
    * Run every minute - useful for health checks, monitoring, etc.
@@ -26,13 +29,23 @@ export class ScheduledTasksService {
   }
 
   /**
-   * Run every day at midnight - useful for daily maintenance
+   * Run every day at midnight - retry failed content processing
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  handleCronDaily() {
+  async handleCronDaily() {
     this.logger.log('Running scheduled task daily at midnight');
-    // Add your daily task logic here
-    // Example: Database maintenance, backup, analytics, etc.
+    try {
+      // Retry failed content processing jobs
+      const jobs = await this.contentQueueService.queueFailedArticlesForRetry(50);
+      if (jobs.length > 0) {
+        this.logger.log(`🔄 Queued ${jobs.length} failed articles for retry`);
+      }
+      
+      // Clean up old jobs
+      await this.contentQueueService.cleanupOldJobs();
+    } catch (error) {
+      this.logger.error(`❌ Failed to retry failed articles: ${error.message}`);
+    }
   }
 
   /**
@@ -56,13 +69,20 @@ export class ScheduledTasksService {
   }
 
   /**
-   * Custom cron expression - every 15 minutes
+   * Custom cron expression - every 15 minutes - queue articles for content processing
    */
   @Cron('0 */15 * * * *')
-  handleCustomCron() {
+  async handleCustomCron() {
     this.logger.log('Running scheduled task every 15 minutes');
-    // Add your custom schedule task logic here
-    // Example: Sync data, check external services, etc.
+    try {
+      // Queue pending articles for content processing (reduced to avoid overwhelming AI services)
+      const jobs = await this.contentQueueService.queuePendingArticles(5);
+      if (jobs.length > 0) {
+        this.logger.log(`📝 Queued ${jobs.length} articles for content processing`);
+      }
+    } catch (error) {
+      this.logger.error(`❌ Failed to queue articles for content processing: ${error.message}`);
+    }
   }
 
   /**

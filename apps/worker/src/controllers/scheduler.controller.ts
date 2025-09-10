@@ -3,6 +3,7 @@ import { NewsSchedulerService } from '../tasks/news-scheduler.service';
 import { ScheduledTasksService } from '../tasks/scheduled-tasks.service';
 import { HackerNewsService } from '../sources';
 import { NewsStorageService } from '../database/news-storage.service';
+import { ContentQueueService } from '../services/content-queue.service';
 
 @Controller({
   version: '1',
@@ -13,7 +14,8 @@ export class SchedulerController {
     private readonly newsSchedulerService: NewsSchedulerService,
     private readonly scheduledTasksService: ScheduledTasksService,
     private readonly hackerNewsService: HackerNewsService,
-    private readonly newsStorageService: NewsStorageService
+    private readonly newsStorageService: NewsStorageService,
+    private readonly contentQueueService: ContentQueueService
   ) {}
 
   @Post('news/trigger')
@@ -228,6 +230,83 @@ export class SchedulerController {
     } catch (error) {
       return {
         message: 'Duplicate cleanup failed',
+        error: error.message
+      };
+    }
+  }
+
+  // Content Processing Endpoints
+
+  @Post('content/trigger')
+  async triggerContentProcessing(@Query('limit') limit?: string) {
+    try {
+      const limitNum = limit ? parseInt(limit) : 50;
+      const jobs = await this.contentQueueService.queuePendingArticles(limitNum);
+      
+      return {
+        message: 'Content processing triggered successfully',
+        timestamp: new Date().toISOString(),
+        jobsQueued: jobs.length,
+        limit: limitNum
+      };
+    } catch (error) {
+      return {
+        message: 'Content processing trigger failed',
+        error: error.message
+      };
+    }
+  }
+
+  @Post('content/retry-failed')
+  async retryFailedContentProcessing(@Query('limit') limit?: string) {
+    try {
+      const limitNum = limit ? parseInt(limit) : 25;
+      const jobs = await this.contentQueueService.queueFailedArticlesForRetry(limitNum);
+      
+      return {
+        message: 'Failed content processing retry triggered',
+        timestamp: new Date().toISOString(),
+        jobsQueued: jobs.length,
+        limit: limitNum
+      };
+    } catch (error) {
+      return {
+        message: 'Failed content processing retry failed',
+        error: error.message
+      };
+    }
+  }
+
+  @Get('content/status')
+  async getContentProcessingStatus() {
+    try {
+      const queueStats = await this.contentQueueService.getQueueStats();
+      
+      return {
+        message: 'Content processing status retrieved',
+        timestamp: new Date().toISOString(),
+        queue: queueStats
+      };
+    } catch (error) {
+      return {
+        message: 'Failed to get content processing status',
+        error: error.message
+      };
+    }
+  }
+
+  @Post('content/cleanup')
+  async cleanupContentProcessingJobs() {
+    try {
+      await this.contentQueueService.cleanupOldJobs();
+      
+      return {
+        message: 'Content processing job cleanup completed',
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        message: 'Content processing job cleanup failed',
         error: error.message
       };
     }
