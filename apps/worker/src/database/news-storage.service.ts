@@ -49,6 +49,88 @@ export class NewsStorageService {
   }
 
   /**
+   * Get article by ID
+   */
+  async getArticleById(articleId: string) {
+    return this.retryWithBackoff(
+      () => this.prisma.article.findUnique({
+        where: { id: articleId },
+        include: { source: true },
+      }),
+      'Get article by ID'
+    );
+  }
+
+  /**
+   * Update article processing status
+   */
+  async updateArticleProcessingStatus(articleId: string, status: 'pending' | 'processing' | 'completed' | 'failed') {
+    return this.retryWithBackoff(
+      () => this.prisma.article.update({
+        where: { id: articleId },
+        data: { processingStatus: status },
+      }),
+      'Update article processing status'
+    );
+  }
+
+  /**
+   * Update article content with processed data
+   */
+  async updateArticleContent(articleId: string, data: {
+    htmlContent?: string;
+    cleanedText?: string;
+    summary?: string;
+    processingStatus?: 'pending' | 'processing' | 'completed' | 'failed';
+    processedAt?: Date;
+    lastError?: string | null;
+  }) {
+    return this.retryWithBackoff(
+      () => this.prisma.article.update({
+        where: { id: articleId },
+        data,
+      }),
+      'Update article content'
+    );
+  }
+
+  /**
+   * Get articles that need content processing
+   */
+  async getArticlesForContentProcessing(limit: number = 100) {
+    return this.retryWithBackoff(
+      () => this.prisma.article.findMany({
+        where: {
+          processingStatus: 'pending',
+          url: { not: '' },
+        },
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { source: true },
+      }),
+      'Get articles for content processing'
+    );
+  }
+
+  /**
+   * Get articles with failed processing for retry
+   */
+  async getFailedProcessingArticles(limit: number = 50) {
+    return this.retryWithBackoff(
+      () => this.prisma.article.findMany({
+        where: {
+          processingStatus: 'failed',
+          url: { not: '' },
+        },
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: { source: true },
+      }),
+      'Get failed processing articles'
+    );
+  }
+
+  /**
    * Save Hacker News stories to the database with enhanced deduplication
    */
   async saveHackerNewsStories(stories: ProcessedStory[]): Promise<{

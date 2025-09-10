@@ -84,6 +84,14 @@ model Article {
   rawSnapshotUrl String?  // S3/object storage key
   hash           String   @unique   // content hash for idempotency
   embedding      Bytes?             // optional (pgvector in phase 2)
+  
+  // New fields for enhanced processing
+  htmlContent    String?            // Raw HTML content fetched from URL
+  summary        String?            // AI-generated summary
+  processingStatus String @default("pending") // "pending" | "processing" | "completed" | "failed"
+  processedAt    DateTime?          // When processing was completed
+  lastError      String?            // Last error message if processing failed
+  
   createdAt      DateTime @default(now())
   source         Source   @relation(fields: [sourceId], references: [id], onDelete: Cascade)
   entities       ArticleEntity[]
@@ -92,6 +100,8 @@ model Article {
   @@index([publishedAt])
   @@index([outlet])
   @@index([lang])
+  @@index([processingStatus])
+  @@index([processedAt])
 }
 
 model Cluster {

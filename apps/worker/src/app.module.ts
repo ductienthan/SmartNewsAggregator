@@ -7,6 +7,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { WinstonModule } from 'nest-winston';
 import { TestingProcessor } from './processors/testing-processor';
 import { NewsProcessor } from './processors/news-processor';
+import { ContentProcessor } from './processors/content-processor';
 import { ScheduledTasksService } from './tasks/scheduled-tasks.service';
 import { NewsSchedulerService } from './tasks/news-scheduler.service';
 import { SchedulerController } from './controllers/scheduler.controller';
@@ -14,6 +15,8 @@ import { QueueManagementController } from './controllers/queue-management.contro
 import { HackerNewsService } from './sources';
 import { NewsStorageService } from './database/news-storage.service';
 import { NewsQueueService } from './services/news-queue.service';
+import { ContentProcessingService } from './services/content-processing.service';
+import { ContentQueueService } from './services/content-queue.service';
 import { QueueModule } from './common/modules/queue.module';
 import { getWinstonConfig } from './common/config/winston.config';
 
@@ -33,6 +36,13 @@ import { getWinstonConfig } from './common/config/winston.config';
         port: parseInt(process.env.REDIS_PORT ?? '6379'),
       },
     }),
+    BullModule.registerQueue({
+      name: 'content-queue',
+      connection: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT ?? '6379'),
+      },
+    }),
   ],
   controllers: [
     AppController, 
@@ -43,11 +53,14 @@ import { getWinstonConfig } from './common/config/winston.config';
     AppService, 
     TestingProcessor,
     NewsProcessor,
+    ContentProcessor,
     ScheduledTasksService, 
     NewsSchedulerService, 
     HackerNewsService,
     NewsStorageService,
-    NewsQueueService
+    NewsQueueService,
+    ContentProcessingService,
+    ContentQueueService
   ],
 })
 export class AppModule {}
