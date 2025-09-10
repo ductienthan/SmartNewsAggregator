@@ -12,10 +12,8 @@ common/
 │   └── queue.module.ts
 ├── services/           # Core services
 │   ├── queue-adapter.service.ts
-│   ├── queue-stats.service.ts
-│   └── bull-board.service.ts
+│   └── queue-stats.service.ts
 └── config/            # Configuration
-    └── bull-board.config.ts
 ```
 
 ## 🎯 Design Principles
@@ -24,7 +22,6 @@ common/
 Each service has one clear purpose:
 - **QueueAdapterService**: Queue registration and discovery
 - **QueueStatsService**: Statistics and job management
-- **BullBoardService**: UI configuration and setup
 
 ### Dependency Injection
 Services are properly injected and testable with clear interfaces.
@@ -99,28 +96,6 @@ const jobs = await queueStatsService.getRecentJobs(10);
 
 // Clean old jobs
 const result = await queueStatsService.cleanOldJobs(7);
-```
-
-### BullBoardService
-
-**Purpose**: Bull Board UI configuration and management
-
-**Features**:
-- Automatic UI setup with all registered queues
-- Reinitialization when queues change
-- Status monitoring
-- Express adapter management
-
-**Usage**:
-```typescript
-// Get Express adapter for routing
-const adapter = bullBoardService.getServerAdapter();
-
-// Check initialization status
-const isReady = bullBoardService.isInitialized();
-
-// Reinitialize with current queues
-await bullBoardService.reinitialize();
 ```
 
 ## 🌐 API Endpoints

@@ -10,7 +10,6 @@ import { NewsProcessor } from './processors/news-processor';
 import { ScheduledTasksService } from './tasks/scheduled-tasks.service';
 import { NewsSchedulerService } from './tasks/news-scheduler.service';
 import { SchedulerController } from './controllers/scheduler.controller';
-import { BullBoardController } from './controllers/bull-board.controller';
 import { QueueManagementController } from './controllers/queue-management.controller';
 import { HackerNewsService } from './sources';
 import { NewsStorageService } from './database/news-storage.service';
@@ -34,18 +33,10 @@ import { getWinstonConfig } from './common/config/winston.config';
         port: parseInt(process.env.REDIS_PORT ?? '6379'),
       },
     }),
-    BullModule.registerQueue({
-      name: 'news-queue',
-      connection: {
-        host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT ?? '6379'),
-      },
-    }),
   ],
   controllers: [
     AppController, 
     SchedulerController, 
-    BullBoardController,
     QueueManagementController
   ],
   providers: [
